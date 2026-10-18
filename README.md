@@ -113,3 +113,62 @@ python -m venv .venv-langgraph; .venv-langgraph\Scripts\activate; pip install la
 python python_basic_agent_agentsdk_langgraph.py --demo
 ```
 Every `modelsdk` / `agentsdk` file runs the rule-based agent instead if its package or key is missing, so it never crashes.
+
+## Model SDK vs agent SDK in production
+
+An agent SDK always calls a model SDK underneath. The real choice is **who writes the agent loop**.
+
+| | Model SDK + your own loop | Agent SDK |
+|---|---|---|
+| Good for | Clear, fixed jobs: support bots, document Q&A, extraction | Many steps/tools, multi-agent, long-running, human approval |
+| Pros | Full control, easy to debug, few dependencies, predictable cost | State, handoffs, tracing, MCP, streaming built in; faster to ship |
+| Cons | You build retries, memory, tracing, guardrails yourself | Hidden behaviour, more dependencies, APIs change often |
+
+Rule of thumb: start with a model SDK + the model's built-in tool calling; move to an agent SDK when you are
+rebuilding state, retries, handoffs or tracing by hand. Either way, production also needs guardrails, logging/tracing,
+evaluation tests, rate/cost limits, secrets management, and timeouts with fallbacks.
+
+## Which model SDK each agent SDK uses underneath
+
+| Agent SDK | Default model call | LiteLLM? |
+|---|---|---|
+| OpenAI Agents SDK | `openai` | optional (`LitellmModel`) |
+| Google ADK | `google-genai` (Gemini) | for non-Gemini models (`LiteLlm`) |
+| Claude Agent SDK | Claude Code CLI -> Anthropic API | no |
+| Semantic Kernel | `openai` (+ own connectors) | no |
+| AutoGen | `openai` (`OpenAIChatCompletionClient`) | no |
+| Microsoft Agent Framework | `openai` | no |
+| AWS Strands | `boto3` (Bedrock); these files use its `openai` provider | optional |
+| LangChain / LangGraph | `langchain-openai` (wraps `openai`) | optional |
+| CrewAI | its `LLM` class (direct for main providers in newer versions) | yes, at least as fallback |
+| LlamaIndex | `openai` (`OpenAILike`) | optional |
+| smolagents | `openai` (`OpenAIModel`) | optional (`LiteLLMModel`) |
+| Pydantic AI | `openai` | no |
+
+The `openai` SDK is the most common because many providers and local servers (Ollama, Groq, vLLM, Azure) copy its API format.
+In each `python_basic_agent_agentsdk_*.py` class you can see the model-SDK object (`AsyncOpenAI`, `ChatOpenAI`, `LiteLlm`...)
+that actually calls the LLM; the agent SDK runs the loop around it.
+
+## LiteLLM and other ways to connect multiple providers
+
+**LiteLLM** works at the model layer only (no agent loop, planning or memory). Two forms:
+- **Python SDK**: `litellm.completion(model="anthropic/claude-haiku-4-5", ...)` - one function for 100+ providers
+  (see `python_basic_agent_modelsdk_litellm.py`).
+- **Proxy server (AI gateway)**: apps call it in OpenAI format; it adds per-team keys, budgets, rate limits, fallbacks,
+  load balancing, caching, logging and cost tracking. This is how it is mostly used in production (open source + paid Enterprise).
+
+Enterprise options for many providers:
+
+| Option | Examples | Why |
+|---|---|---|
+| Cloud model platform | AWS Bedrock, Azure AI Foundry, Google Vertex AI (Model Garden) | Data stays in your cloud, existing billing, IAM and compliance |
+| AI gateway | LiteLLM Proxy, Portkey, TrueFoundry, Helicone, Azure API Management, Kong AI Gateway, Cloudflare AI Gateway, Envoy AI Gateway, Databricks Mosaic AI Gateway | One company-wide entry point: keys, budgets, fallbacks, logging, guardrails |
+| Hosted aggregator | OpenRouter | One key for hundreds of models; good for prototypes, less common in enterprises |
+| Library in your code | LiteLLM SDK, LangChain chat models, Semantic Kernel connectors, Spring AI (Java), Vercel AI SDK (JS/TS) | No extra server |
+| Your own adapter layer | One interface + a class per provider (like the `...ModelSDK` classes here) | Full control, often with a gateway behind it |
+
+Common enterprise setup:
+```
+apps / agents -> AI gateway (LiteLLM Proxy, Kong, Azure APIM, Portkey...)
+              -> Bedrock / Azure / Vertex / OpenAI / Anthropic / self-hosted (vLLM, Ollama)
+```
