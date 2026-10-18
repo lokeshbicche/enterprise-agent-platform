@@ -1,8 +1,8 @@
-"""Unit tests for basic_agent.py. Run with:  python -m unittest -v"""
+"""Unit tests for python_basic_agent_without_AI.py. Run with:  python -m unittest -v"""
 
 import unittest
 
-from basic_agent import BasicAgent, calculator_tool
+from python_basic_agent_without_AI import BasicAgent, calculator_tool
 
 
 class TestCalculator(unittest.TestCase):

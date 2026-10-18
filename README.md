@@ -8,7 +8,7 @@ A basic AI agent written in **plain Python** (standard library only, no AI frame
 PERCEIVE -> THINK -> ACT -> OBSERVE -> REMEMBER -> RESPOND
 ```
 
-| Step     | Method in `basic_agent.py` | What it does                                            |
+| Step     | Method in `python_basic_agent_without_AI.py` | What it does                                            |
 |----------|----------------------------|---------------------------------------------------------|
 | Perceive | `BasicAgent.perceive()`    | Receives the user goal and stores it in memory          |
 | Think    | `BasicAgent.think()`       | Splits the goal into sub-tasks and picks a tool for each |
@@ -22,8 +22,8 @@ In a production agent the `think()` step would call an LLM; here it is rule-base
 ## Run (Python 3.8+)
 
 ```bash
-python basic_agent.py           # interactive chat
-python basic_agent.py --demo    # scripted demo
+python python_basic_agent_without_AI.py           # interactive chat
+python python_basic_agent_without_AI.py --demo    # scripted demo
 python -m unittest -v           # tests
 ```
 
@@ -33,7 +33,7 @@ Example prompts: `calculate (12 + 8) * 3`, `remember my name is Bicche`, `what i
 ## Extend it
 
 ```python
-from basic_agent import BasicAgent, Tool
+from python_basic_agent_without_AI import BasicAgent, Tool
 
 agent = BasicAgent()
 agent.register_tool(Tool("upper", "Uppercase text", lambda text: text.upper()))

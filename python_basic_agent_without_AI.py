@@ -1,5 +1,5 @@
 """
-basic_agent.py - A simple, framework-free AI agent written in plain Python.
+python_basic_agent_without_AI.py - A simple, framework-free AI agent written in plain Python.
 
 What is an agent?
     An agent is a program that repeatedly:
@@ -15,8 +15,8 @@ What is an agent?
     loop clearly, with no external libraries, API keys, or AI frameworks.
 
 Run:
-    python basic_agent.py          # interactive chat mode
-    python basic_agent.py --demo   # run a scripted demo and exit
+    python python_basic_agent_without_AI.py          # interactive chat mode
+    python python_basic_agent_without_AI.py --demo   # run a scripted demo and exit
 
 Requires: Python 3.8+ (standard library only).
 """
