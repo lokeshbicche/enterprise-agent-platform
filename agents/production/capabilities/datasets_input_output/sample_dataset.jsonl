@@ -1,0 +1,3 @@
+{"record_id":"faq-001","input":"When may a customer return an item?","expected_output":"Items may be returned within 30 days of delivery.","dataset_version":"support-faq-v1"}
+{"record_id":"faq-002","input":"How can a customer track an order?","expected_output":"Use the tracking link in the shipping confirmation email.","dataset_version":"support-faq-v1"}
+{"record_id":"faq-003","input":"What is the support contact method?","expected_output":"Contact support through the help center.","dataset_version":"support-faq-v1"}

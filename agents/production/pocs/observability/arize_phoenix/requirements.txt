@@ -1,0 +1,4 @@
+openinference-instrumentation-langchain>=0.1
+langchain-openai>=1,<2
+opentelemetry-sdk>=1.25
+opentelemetry-exporter-otlp>=1.25

@@ -1,0 +1,2 @@
+weaviate-client>=4.10,<5
+openai>=1,<3

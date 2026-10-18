@@ -1,0 +1,2 @@
+pinecone>=7,<8
+openai>=1,<3

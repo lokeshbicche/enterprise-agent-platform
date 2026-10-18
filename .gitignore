@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .venv/
 .vscode/
+.env
+.env.*
+!.env.example
+agents/vector/.qdrant_data/
+agents/rag/.chroma_data/
+agents/rag/.weaviate_data/

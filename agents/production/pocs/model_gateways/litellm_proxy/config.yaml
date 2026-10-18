@@ -1,0 +1,17 @@
+model_list:
+  - model_name: enterprise-chat
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: enterprise-chat-backup
+    litellm_params:
+      model: anthropic/claude-3-5-haiku-latest
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+router_settings:
+  fallbacks:
+    - enterprise-chat:
+        - enterprise-chat-backup
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

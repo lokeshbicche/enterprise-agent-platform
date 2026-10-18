@@ -9,6 +9,6 @@ python -m agents.with_rag.agent_rag_hr_policy --demo
 python -m agents.with_rag.agent_rag_hr_policy
 ```
 
-The retriever uses simple term overlap so the steps are easy to inspect. It is not semantic search; see the [vector search example](../with_vector/README.md) for cosine similarity over in-memory vectors. Real production RAG commonly adds embeddings, a document ingestion pipeline, access controls, and an LLM to generate an answer from retrieved context. Those pieces are intentionally left out here to avoid extra dependencies and persistence.
+The retriever uses simple term overlap so the steps are easy to inspect. It is not semantic search; see the [vector search examples](../vector/README.md) for vector stores and databases. For the complete RAG learning path—including the seven-stage offline pipeline, individual Chroma/Pinecone/Weaviate examples, advanced retrieval, use cases, evaluation, and POC-to-enterprise guidance—see [production RAG](production/README.md).
 
 See [the example source](agent_rag_hr_policy.py).
