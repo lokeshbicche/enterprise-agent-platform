@@ -62,3 +62,54 @@ python python_basic_agent_with_AI_rawhttp.py --demo
 python python_basic_agent_with_AI_sdk.py --demo
 ```
 Without a key/server (or without the SDK installed) both fall back to the rule-based planner, so they always run.
+
+## Model SDKs: one file per provider (`python_basic_agent_modelsdk_*.py`)
+
+A **model SDK** only replaces the LLM call. Each file is the same `BasicAgent` (same tools, same loop, same demo);
+the THINK step calls one provider class, e.g. `AnthropicModelSDK.call(system_prompt, user_prompt)`.
+Compare two of these files to see how providers differ.
+
+| File | Class | Install | Configure (env vars) |
+|------|-------|---------|----------------------|
+| `python_basic_agent_modelsdk_openai.py` | `OpenAIModelSDK` | `pip install openai` | `OPENAI_API_KEY` |
+| `python_basic_agent_modelsdk_anthropic.py` | `AnthropicModelSDK` | `pip install anthropic` | `ANTHROPIC_API_KEY` |
+| `python_basic_agent_modelsdk_google_genai.py` | `GoogleGenAIModelSDK` | `pip install google-genai` | `GEMINI_API_KEY` (free tier) |
+| `python_basic_agent_modelsdk_azure_openai.py` | `AzureOpenAIModelSDK` | `pip install openai` | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` |
+| `python_basic_agent_modelsdk_aws_bedrock.py` | `AWSBedrockModelSDK` | `pip install boto3` | AWS credentials (`aws configure`), `AWS_REGION` |
+| `python_basic_agent_modelsdk_mistral.py` | `MistralModelSDK` | `pip install mistralai` | `MISTRAL_API_KEY` |
+| `python_basic_agent_modelsdk_cohere.py` | `CohereModelSDK` | `pip install cohere` | `COHERE_API_KEY` |
+| `python_basic_agent_modelsdk_groq.py` | `GroqModelSDK` | `pip install groq` | `GROQ_API_KEY` (free tier) |
+| `python_basic_agent_modelsdk_ollama.py` | `OllamaModelSDK` | `pip install ollama` | none - local Ollama app, `OLLAMA_MODEL` |
+| `python_basic_agent_modelsdk_huggingface.py` | `HuggingFaceModelSDK` | `pip install huggingface_hub` | `HF_TOKEN` |
+| `python_basic_agent_modelsdk_litellm.py` | `LiteLLMModelSDK` | `pip install litellm` | `LITELLM_MODEL` (e.g. `ollama/llama3.2`) + that provider's key |
+
+## Agent SDKs: one file per framework (`python_basic_agent_agentsdk_*.py`)
+
+An **agent SDK** replaces the whole `BasicAgent` loop: you give it a model, instructions and plain Python
+functions as tools, and it does THINK -> ACT -> OBSERVE (tool calling) and memory for you.
+All files share the same tools and demo; only the `...Agent` class is framework-specific.
+
+| File | Class | Install |
+|------|-------|---------|
+| `python_basic_agent_agentsdk_openai_agents.py` | `OpenAIAgentsSDKAgent` | `pip install openai-agents` |
+| `python_basic_agent_agentsdk_google_adk.py` | `GoogleADKAgent` | `pip install google-adk litellm mcp` |
+| `python_basic_agent_agentsdk_claude_agent.py` | `ClaudeAgentSDKAgent` | `pip install claude-agent-sdk` |
+| `python_basic_agent_agentsdk_semantic_kernel.py` | `SemanticKernelAgent` | `pip install semantic-kernel` |
+| `python_basic_agent_agentsdk_autogen.py` | `AutoGenAgent` | `pip install autogen-agentchat "autogen-ext[openai]"` |
+| `python_basic_agent_agentsdk_microsoft_agent_framework.py` | `MicrosoftAgentFrameworkAgent` | `pip install agent-framework` |
+| `python_basic_agent_agentsdk_strands.py` | `StrandsAgent` | `pip install "strands-agents[openai]"` |
+| `python_basic_agent_agentsdk_langgraph.py` | `LangGraphAgent` | `pip install langchain langgraph langchain-openai` |
+| `python_basic_agent_agentsdk_crewai.py` | `CrewAIAgent` | `pip install crewai` |
+| `python_basic_agent_agentsdk_llamaindex.py` | `LlamaIndexAgent` | `pip install llama-index-core llama-index-llms-openai-like` |
+| `python_basic_agent_agentsdk_smolagents.py` | `SmolAgentsAgent` | `pip install "smolagents[openai]"` |
+| `python_basic_agent_agentsdk_pydantic_ai.py` | `PydanticAIAgent` | `pip install "pydantic-ai-slim[openai]"` |
+
+Configure with `OPENAI_API_KEY` (or `OPENAI_BASE_URL=http://localhost:11434/v1` + `OPENAI_MODEL=llama3.2` for free local Ollama).
+Exceptions: Claude Agent SDK needs `ANTHROPIC_API_KEY`; Google ADK uses `GOOGLE_API_KEY` (Gemini) if set.
+
+Tip: frameworks have conflicting dependencies - use one virtual environment per SDK:
+```powershell
+python -m venv .venv-langgraph; .venv-langgraph\Scripts\activate; pip install langchain langgraph langchain-openai
+python python_basic_agent_agentsdk_langgraph.py --demo
+```
+Every `modelsdk` / `agentsdk` file runs the rule-based agent instead if its package or key is missing, so it never crashes.
