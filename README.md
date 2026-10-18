@@ -40,18 +40,25 @@ agent.register_tool(Tool("upper", "Uppercase text", lambda text: text.upper()))
 ```
 Then add a rule for it in `BasicAgent._choose_tool()`.
 
-## With AI: `python_basic_agent_with_AI.py`
+## With AI: raw HTTP vs SDK
 
-Same agent, same tools — **only the THINK step changes**: the goal and tool list are sent to an LLM
-(plain HTTP via `urllib`, no SDK/framework) and the LLM returns the plan as JSON.
-Compare the two files side by side in VS Code (select both → right-click → *Compare Selected*).
+Same agent, same tools — **only the THINK step changes**: the goal and tool list are sent to an LLM,
+which returns the plan as JSON. Two versions, identical except for `call_llm()`:
 
-```bash
-# OpenAI (Windows PowerShell: $env:LLM_API_KEY="sk-...")
-export LLM_API_KEY=sk-...                  # optional: LLM_MODEL (default gpt-4o-mini)
-# or free local Ollama
-export LLM_BASE_URL=http://localhost:11434/v1 LLM_MODEL=llama3.2
+| File | How it calls the LLM | Install |
+|------|----------------------|---------|
+| `python_basic_agent_with_AI_rawhttp.py` | Raw HTTP with built-in `urllib` (you build URL, headers, JSON) | nothing |
+| `python_basic_agent_with_AI_sdk.py` | Official OpenAI SDK (`client.chat.completions.create`) | `pip install openai` |
 
-python python_basic_agent_with_AI.py --demo
+Compare any two files in VS Code: select both → right-click → *Compare Selected*.
+
+```powershell
+# OpenAI (cloud, needs key)
+$env:LLM_API_KEY="sk-..."                                   # optional: $env:LLM_MODEL (default gpt-4o-mini)
+# or Ollama (local, free, no key)
+$env:LLM_BASE_URL="http://localhost:11434/v1"; $env:LLM_MODEL="llama3.2"
+
+python python_basic_agent_with_AI_rawhttp.py --demo
+python python_basic_agent_with_AI_sdk.py --demo
 ```
-Without a key/server it falls back to the rule-based planner, so it always runs.
+Without a key/server (or without the SDK installed) both fall back to the rule-based planner, so they always run.

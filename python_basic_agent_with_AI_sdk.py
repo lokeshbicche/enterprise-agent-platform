@@ -1,5 +1,6 @@
 """
-python_basic_agent_with_AI.py - The same basic agent, but the THINK step uses an AI model (LLM).
+python_basic_agent_with_AI_sdk.py - The same basic agent, but the THINK step uses an AI model (LLM),
+called with the official OpenAI Python SDK (pip install openai).
 
 Compare with python_basic_agent_without_AI.py: tools, memory, act, observe and
 respond are unchanged. Only THINK is different - instead of keyword rules, the
@@ -14,20 +15,25 @@ What is an agent?
         5. REMEMBERS  - stores what happened so later decisions can use it
     ...until the goal is achieved, then it RESPONDS.
 
-    Here the "brain" is an LLM, called over plain HTTP with urllib
-    (no AI framework, no SDK, no pip install). Any OpenAI-compatible API works.
+    Here the "brain" is an LLM, called with the OpenAI SDK (no AI framework).
+    The SDK builds the HTTP request, handles retries/timeouts and parses the reply.
+    Any OpenAI-compatible API works (OpenAI, Ollama, Groq, ...).
+    Compare with python_basic_agent_with_AI_rawhttp.py: only call_llm() differs.
+
+Install:
+    pip install openai
 
 Setup (set environment variables before running):
     OpenAI:  LLM_API_KEY=sk-...   (optional: LLM_MODEL, default gpt-4o-mini)
     Ollama (free, local):  LLM_BASE_URL=http://localhost:11434/v1  LLM_MODEL=llama3.2
-    If no API key / server is available, the agent falls back to the rule-based
+    If the SDK is not installed or no API key / server is available, the agent falls back to the rule-based
     planner from python_basic_agent_without_AI.py so it still runs.
 
 Run:
-    python python_basic_agent_with_AI.py          # interactive chat mode
-    python python_basic_agent_with_AI.py --demo   # run a scripted demo and exit
+    python python_basic_agent_with_AI_sdk.py          # interactive chat mode
+    python python_basic_agent_with_AI_sdk.py --demo   # run a scripted demo and exit
 
-Requires: Python 3.8+ (standard library only).
+Requires: Python 3.8+ and the openai package.
 """
 
 import ast
@@ -36,10 +42,14 @@ import operator
 import os
 import re
 import sys
-import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
+
+try:
+    from openai import OpenAI  # the SDK: pip install openai
+except ImportError:  # keep the agent runnable (rule-based) even without the SDK
+    OpenAI = None
 
 
 # ---------------------------------------------------------------------------
@@ -145,7 +155,7 @@ class Step:
 
 
 # ---------------------------------------------------------------------------
-# NEW: THE AI BRAIN - call an LLM with plain HTTP (OpenAI-compatible chat API)
+# NEW: THE AI BRAIN - call an LLM with the OpenAI SDK (OpenAI-compatible chat API)
 # ---------------------------------------------------------------------------
 
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://api.openai.com/v1")
@@ -155,27 +165,21 @@ LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-4o-mini")
 
 def llm_is_configured() -> bool:
     """An API key is needed for cloud LLMs; a custom base URL (e.g. local Ollama) needs none."""
-    return bool(LLM_API_KEY) or "LLM_BASE_URL" in os.environ
+    return OpenAI is not None and (bool(LLM_API_KEY) or "LLM_BASE_URL" in os.environ)
 
 
 def call_llm(system_prompt: str, user_prompt: str) -> str:
     """Send one chat request to the LLM and return its text reply."""
-    body = {
-        "model": LLM_MODEL,
-        "temperature": 0,
-        "messages": [
+    client = OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY or "none", timeout=60, max_retries=2)
+    response = client.chat.completions.create(
+        model=LLM_MODEL,
+        temperature=0,
+        messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-    }
-    request = urllib.request.Request(
-        LLM_BASE_URL.rstrip("/") + "/chat/completions",
-        data=json.dumps(body).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {LLM_API_KEY or 'none'}"},
     )
-    with urllib.request.urlopen(request, timeout=60) as response:
-        data = json.loads(response.read().decode("utf-8"))
-    return data["choices"][0]["message"]["content"]
+    return response.choices[0].message.content or ""
 
 
 # ---------------------------------------------------------------------------
@@ -259,7 +263,8 @@ class BasicAgent:
             except Exception as exc:  # network/API/JSON problems must not crash the agent
                 self.log(f"[THINK]    LLM unavailable ({exc}); falling back to rules")
         else:
-            self.log("[THINK]    No LLM configured (set LLM_API_KEY or LLM_BASE_URL); using rules")
+            reason = "openai SDK not installed (pip install openai)" if OpenAI is None else "set LLM_API_KEY or LLM_BASE_URL"
+            self.log(f"[THINK]    No LLM configured ({reason}); using rules")
         return self._think_with_rules(goal)
 
     def _think_with_llm(self, goal: str) -> List[Step]:
