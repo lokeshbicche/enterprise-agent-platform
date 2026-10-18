@@ -1,5 +1,5 @@
 """
-python_basic_agent_with_AI_sdk.py - The same basic agent, but the THINK step uses an AI model (LLM),
+m .py - The same basic agent, but the THINK step uses an AI model (LLM),
 called with the official OpenAI Python SDK (pip install openai).
 
 Compare with python_basic_agent_without_AI.py: tools, memory, act, observe and
