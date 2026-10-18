@@ -39,3 +39,19 @@ agent = BasicAgent()
 agent.register_tool(Tool("upper", "Uppercase text", lambda text: text.upper()))
 ```
 Then add a rule for it in `BasicAgent._choose_tool()`.
+
+## With AI: `python_basic_agent_with_AI.py`
+
+Same agent, same tools — **only the THINK step changes**: the goal and tool list are sent to an LLM
+(plain HTTP via `urllib`, no SDK/framework) and the LLM returns the plan as JSON.
+Compare the two files side by side in VS Code (select both → right-click → *Compare Selected*).
+
+```bash
+# OpenAI (Windows PowerShell: $env:LLM_API_KEY="sk-...")
+export LLM_API_KEY=sk-...                  # optional: LLM_MODEL (default gpt-4o-mini)
+# or free local Ollama
+export LLM_BASE_URL=http://localhost:11434/v1 LLM_MODEL=llama3.2
+
+python python_basic_agent_with_AI.py --demo
+```
+Without a key/server it falls back to the rule-based planner, so it always runs.
